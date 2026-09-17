@@ -28,6 +28,7 @@ interview-minutes-skill/
 │   ├── template_manifest.json
 │   └── template_minutes.docx
 ├── references/
+│   ├── content_protocol.md
 │   ├── format_protocol.md
 │   └── name_verification.md
 ├── scripts/
@@ -121,15 +122,15 @@ python3 scripts/verify_docx_format.py /absolute/path/output.docx \
 
 ## 企业名称核验
 
-企查查 MCP 是可选外部能力，不是安装本 Skill 的前提。团队具有合法权限时，在自己的 Agent 环境中配置相关 Server 和 Token；不要把 Token 写入仓库、脚本或纪要。
+企查查 MCP 不是安装本 Skill 的前提，但团队环境具有合法可用的企查查 MCP 时，国内企业名称核验必须优先调用，并与官网或权威来源交叉验证。在自己的 Agent 环境中配置相关 Server 和 Token；不要把 Token 写入仓库、脚本或纪要。
 
-原生工具发现异常时，可使用：
+原生工具发现异常时，必须先使用以下直连发现路径，不得仅因当前会话显示 0 个 QCC 工具就跳过企查查：
 
 ```bash
 python3 scripts/qcc_mcp_call.py --server qcc-company --list-tools
 ```
 
-未配置企查查时，按 `references/name_verification.md` 使用其他合法工商数据库及权威一手来源核验。
+脚本会从用户配置读取 Server，并从环境变量读取 Token，不会打印 Token。直连路径同一请求最多重试 1 次。未配置企查查或两条调用路径均失败时，再按 `references/name_verification.md` 使用其他合法工商数据库及权威一手来源核验，不得伪称已调用企查查。
 
 ## 隐私与合规
 
