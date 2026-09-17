@@ -1,0 +1,8 @@
+interface:
+  display_name: "Interview Minutes"
+  short_description: "将中文访谈转写稿整理为可追溯的机构级 Word 纪要"
+  brand_color: "#1F4E78"
+  default_prompt: "使用 $interview-minutes 将这份访谈转写稿整理为机构级 Word 纪要，并完成内容与版式双重审核。"
+
+policy:
+  allow_implicit_invocation: true
