@@ -1,0 +1,10 @@
+{
+  "template": "template_minutes.docx",
+  "description": "Sanitized enterprise Jiangbin-format template fingerprint",
+  "critical_parts": {
+    "word/styles.xml": "de7a9e2252ffe1a4f541e44124be892dde8ba673c30a7f7ff3074ce9f400b1d2",
+    "word/numbering.xml": "5164c7255e20ca060d2608e19045da11491a7416bbbe9d3f68bcd1f6c95854b5",
+    "word/settings.xml": "9c269fdf1e4eeacea575a81fd3d48fe5a594fd853e0e9cb2709a3124ada3d3d2",
+    "word/theme/theme1.xml": "7d877a14a830a2ffc9d99c589395c10d3cc944b1bba3db0cf6b526db6aa65887"
+  }
+}

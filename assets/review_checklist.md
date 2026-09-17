@@ -113,6 +113,34 @@ grep -nE '(止血|玻璃机|防汗|妨碍|盛红|盛虹|分红|宋红|新奇威|
 
 ## 版式独立审核:视觉与模板一致性(必做)
 
+### 0. 强制程序化校验
+
+先运行格式守门器；只有出现 `FORMAT CHECK PASSED` 才进入逐页视觉检查：
+
+```bash
+python3 scripts/verify_docx_format.py /absolute/path/output.docx \
+  --reference /absolute/path/reference.docx \
+  --project "项目名称" \
+  --subject "访谈对象" \
+  --interview-type "专家访谈" \
+  --date-compact YYYYMMDD
+```
+
+格式守门器必须确认：
+
+- 文件名为`{项目名称}_{访谈对象}{访谈类型}纪要_{YYYYMMDD}.docx`
+- 标题为`{项目名称}-{访谈对象}{访谈类型}`
+- `styles.xml`、`numbering.xml`、`settings.xml`和主题文件未被改写
+- 没有出现模板之外的字体；不得把黑体、楷体或宋体替换成Hiragino Sans GB、苹方、微软雅黑等字体
+- 标题、元信息、主要结论、章节、子标题和要点的段落属性与run属性均来自模板
+- 自动编号段落没有手写“一、”“1.”“➢”“-”等前缀
+- 元信息没有`111`、`XXX`、`TBD`、“待补充”等占位值
+- “访谈纪要”按模板设置受控分页
+
+任一项失败都必须回到模板重新生成，不得通过手动改字体或仅改文件后缀绕过。
+
+### 1. 逐页渲染检查
+
 ```bash
 # 1. 转PDF
 soffice --headless --outdir check --convert-to pdf 访谈纪要.docx
@@ -126,7 +154,9 @@ pdftoppm -r 100 check/访谈纪要.pdf check/p -jpeg
 
 然后用Read工具查看 `check/p-1.jpg` 和 `check/p-{last}.jpg`,确认:
 
+- ❌ 文件名、标题及日期是否符合标准命名协议
 - ❌ 编号是否正确显示(1./2./3./...)
+- ❌ 是否同时出现自动编号与手写编号
 - ❌ 段落缩进是否正确(主要结论缩进/章节缩进/要点缩进三层)
 - ❌ 粗体/正文字体是否正确切换
 - ❌ emoji是否出现乱码块(LibreOffice下彩色emoji会变乱码,如出现立刻换成纯文字"■")

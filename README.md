@@ -1,13 +1,19 @@
 # Interview Minutes Skill
 
-一个面向 Codex／Claude Code 等 Agent 运行环境的中文访谈纪要 Skill。它将带时间戳和说话人标签的语音转写稿整理为机构级 Word 纪要，并执行：
+将中文访谈转写稿整理为机构级 Word 纪要的 Agent Skill。仓库内置经脱敏的企业江滨格式模板，并通过强制生成器和格式守门器保证模板不会被通用 LLM 文档样式覆盖。
 
-- 行业术语与音近公司名纠错
-- 企业／机构名称双重核验
+## 核心能力
+
+- 行业术语和音近公司名纠错
+- 国内企业“企查查 MCP＋官网／权威来源”双重核验
 - 事实、数字和判断逐条回溯原始转录
-- 用户指定 Word 模板的 OOXML 级复刻
+- 企业 Word 模板 OOXML 级继承
+- 标题、文件名和元信息标准化
 - 内容与版式双重独立审核
-- 逐页 PDF 视觉检查
+- 模板指纹、字体、编号和分页自动拦截
+- PDF 逐页视觉检查
+
+普通 LLM 往往会重新选择字体、手写编号或按主题随意命名文件。本 Skill 的生成器只克隆模板原生属性；任何字体覆盖、模板部件变化、重复编号、错误文件名或占位元信息都会触发 `FORMAT CHECK FAILED`，禁止交付。
 
 ## 目录
 
@@ -19,14 +25,18 @@ interview-minutes-skill/
 │   ├── build_minutes.py
 │   ├── glossary_pcb_ldi.md
 │   ├── review_checklist.md
+│   ├── template_manifest.json
 │   └── template_minutes.docx
 ├── references/
 │   ├── format_protocol.md
 │   └── name_verification.md
-└── scripts/qcc_mcp_call.py
+├── scripts/
+│   ├── qcc_mcp_call.py
+│   └── verify_docx_format.py
+└── tests/test_format_guard.py
 ```
 
-仓库中的 Word 模板已去除真实访谈内容、姓名及项目信息，仅保留版式、编号和样式定义。
+模板已移除真实访谈内容、姓名和项目信息，只保留企业版式、字体、间距、编号和页面结构。
 
 ## 安装
 
@@ -38,7 +48,7 @@ mkdir -p ~/.codex/skills
 ln -s "$(pwd)/interview-minutes-skill" ~/.codex/skills/interview-minutes
 ```
 
-如果团队使用共享的 `~/.agents/skills` 目录，将最后两行改为：
+团队使用共享 Skill 目录时：
 
 ```bash
 mkdir -p ~/.agents/skills
@@ -52,47 +62,87 @@ mkdir -p ~/.claude/skills
 ln -s "$(pwd)/interview-minutes-skill" ~/.claude/skills/interview-minutes
 ```
 
-重新启动对应客户端后，即可通过 `$interview-minutes` 显式调用；支持 Skill 自动发现的环境也可在上传访谈转写稿时自动触发。
+重新启动客户端后，通过 `$interview-minutes` 显式调用；支持自动发现的环境也可在上传访谈转写稿时自动触发。
 
-## Python 依赖
+## 依赖
 
 ```bash
 python3 -m pip install -r requirements.txt
 ```
 
-版式审核还建议安装：
+逐页视觉审核还需要 LibreOffice 和 Poppler。若运行环境内置文档渲染工具，优先使用内置版本。
 
-- LibreOffice：把 `.docx` 转为 PDF
-- Poppler：使用 `pdftoppm` 逐页渲染检查
+## 使用方式
 
-## 使用示例
+向 Agent 提供逐字稿、项目名称、访谈对象、访谈类型、日期和元信息：
 
 ```text
 $interview-minutes
 请将这份专家访谈逐字稿整理成高标准 Word 纪要。
-访谈日期：9月11日
+项目名称：示例项目
+访谈对象：某机构
+访谈日期：2026年9月11日
 访谈地点：线上
 访谈人员：张三、李四
-格式严格参考我提供的模板；不得编造，并完成内容与版式双重审核。
+严格使用随 Skill 提供的企业模板，不得编造，并完成内容与版式双重审核。
 ```
+
+Skill 会生成内容 JSON，并强制调用：
+
+```bash
+python3 assets/build_minutes.py \
+  --payload /absolute/path/payload.json \
+  --output-dir /absolute/path/output
+```
+
+成功输出必须同时包含：
+
+```text
+FORMAT CHECK PASSED
+SAVED /absolute/path/项目名称_访谈对象专家访谈纪要_YYYYMMDD.docx
+```
+
+如果用户提供另一份参考 Word，在命令中增加 `--reference /absolute/path/reference.docx`。
+
+## 独立格式检查
+
+```bash
+python3 scripts/verify_docx_format.py /absolute/path/output.docx \
+  --reference assets/template_minutes.docx \
+  --project "示例项目" \
+  --subject "某机构" \
+  --interview-type "专家访谈" \
+  --date-compact 20260911
+```
+
+校验器检查关键模板部件、模板外字体、段落和 run 属性、文件名、标题、元信息、重复手写编号、页面设置和受控分页。
 
 ## 企业名称核验
 
-企查查 MCP 是可选能力，不是安装本 Skill 的前提。团队具有合法企查查权限时，可在 Codex MCP 配置中设置相关 Server 和 Token 环境变量；不要把 Token 写入仓库、脚本或纪要。
+企查查 MCP 是可选外部能力，不是安装本 Skill 的前提。团队具有合法权限时，在自己的 Agent 环境中配置相关 Server 和 Token；不要把 Token 写入仓库、脚本或纪要。
 
-当原生工具发现异常时，`scripts/qcc_mcp_call.py` 可执行 MCP 工具发现：
+原生工具发现异常时，可使用：
 
 ```bash
 python3 scripts/qcc_mcp_call.py --server qcc-company --list-tools
 ```
 
-未配置企查查时，按 `references/name_verification.md` 使用其他合法工商数据库及权威一手来源完成核验。
+未配置企查查时，按 `references/name_verification.md` 使用其他合法工商数据库及权威一手来源核验。
 
 ## 隐私与合规
 
-- 不要把原始访谈、客户名单、个人信息、Token 或内部模板直接提交到公开仓库。
-- 外部检索只用于名称核错，不得把检索到的新业务事实写进单场访谈纪要。
-- 处理敏感尽调材料时，应遵守所在机构的数据和保密政策。
+- 原始逐字稿、客户名单、个人信息和 Token 不应提交到公开仓库。
+- 外部检索仅用于名称核错，不得把检索得到的新业务事实写进单场访谈纪要。
+- Skill 在本地生成 Word；是否调用外部名称核验服务由使用者自己的配置和权限决定。
+- 处理尽调材料时，应遵守所在机构的数据和保密政策。
+
+## 回归测试
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+测试覆盖正确模板输出、字体／样式篡改、错误文件名、重复手写编号和占位元信息。
 
 ## License
 

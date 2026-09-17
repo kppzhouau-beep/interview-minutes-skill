@@ -1,8 +1,8 @@
 interface:
   display_name: "Interview Minutes"
-  short_description: "将中文访谈转写稿整理为可追溯的机构级 Word 纪要"
+  short_description: "以企业模板和强制格式校验生成可追溯的机构级访谈纪要"
   brand_color: "#1F4E78"
-  default_prompt: "使用 $interview-minutes 将这份访谈转写稿整理为机构级 Word 纪要，并完成内容与版式双重审核。"
+  default_prompt: "使用 $interview-minutes 将这份访谈转写稿整理为机构级 Word 纪要。必须通过随包生成器继承企业模板，执行名称核验、内容与版式双重审核，并在 FORMAT CHECK PASSED 后才交付。"
 
 policy:
   allow_implicit_invocation: true
