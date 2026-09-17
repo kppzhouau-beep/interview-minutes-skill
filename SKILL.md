@@ -7,6 +7,8 @@ description: 将专家、客户、管理层或调研访谈的语音转写稿整�
 
 把带有说话人标签、时间戳和转写错误的访谈稿，整理成可用于研究、尽调或内部汇报的 Word 纪要。输出必须同时满足内容可追溯和企业模板零偏差，不得以通用文档美化规则覆盖本 Skill 的模板。
 
+本 Skill 必须以完整目录安装和调用，不能只复制 `SKILL.md`。若 `assets/template_minutes.docx`、`assets/build_minutes.py`、`assets/template_manifest.json` 或 `scripts/verify_docx_format.py` 任一缺失，立即停止并提示安装不完整，不得降级为通用 LLM 自行生成 Word。
+
 ## 不可绕过的交付门槛
 
 以下要求直接决定文件能否交付：
